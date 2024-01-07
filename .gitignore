@@ -1,0 +1,5 @@
+render_venv/
+venv/
+.idea/
+__pycache__/
+resources/models/Dragon.obj
