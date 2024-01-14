@@ -4,12 +4,12 @@
 
 in vec3 in_position;
 out vec3 ambient;
-uniform mat4 MVP_loc;
+uniform mat4 MVP;
 
 vec3 light_source;
 
 void main() {
-    gl_Position = MVP_loc * vec4(in_position, 1.0);
+    gl_Position = MVP * vec4(in_position, 1.0);
     ambient = abs(in_position); //get basic color of object, that will be transmitted to fragment shader
 }
 

@@ -23,7 +23,7 @@ class WindowTest(mglw.WindowConfig):
         self.obj_phong = self.load_scene('models/sphere.obj')
         self.vao_phong = self.obj_phong.root_nodes[0].mesh.vao.instance(self.program_phong)
 
-        self.program_loc = self.load_program(path="shaders/shader_glass.glsl")
+        self.program_loc = self.load_program(path="shaders/shader_location.glsl")
         self.texture = self.ctx.texture(self.wnd.size, 4)
         self.obj_loc = self.load_scene('models/sphere.obj')
         self.vao_loc = self.obj_loc.root_nodes[0].mesh.vao.instance(self.program_loc)
@@ -37,7 +37,7 @@ class WindowTest(mglw.WindowConfig):
         self.uniform_color_fragments_phong = self.program_phong['color_body_part_phong']
         self.uniform_viewing_position_phong = self.program_phong['viewing_phong']
 
-        self.uniform_MVP_loc = self.program_loc['u_viewProjectionMatrix']
+        self.uniform_MVP_loc = self.program_loc['MVP']
 
     def render(self, time, frametime):
         # Prepare context
