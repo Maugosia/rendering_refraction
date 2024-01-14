@@ -130,7 +130,7 @@ class WindowSkybox(mglw.WindowConfig):
         diff = self.vector_lookat - self.vector_viewer
 
         if self.vector_lookat[0] < 0:
-            rot_up_matrix_1 = Matrix44.from_z_rotation(+dy / 600)
+            rot_up_matrix_1 = Matrix44.from_z_rotation(dy / 600)
         else:
             rot_up_matrix_1 = Matrix44.from_z_rotation(-dy / 600)
         if self.vector_lookat[2] < 0:
