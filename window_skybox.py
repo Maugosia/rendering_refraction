@@ -4,6 +4,7 @@ from pathlib import Path
 from pyrr import Matrix44, Matrix33
 from pyrr import Vector3
 from math import pi
+import numpy as np
 
 
 class WindowSkybox(mglw.WindowConfig):
@@ -18,6 +19,13 @@ class WindowSkybox(mglw.WindowConfig):
         self.vector_viewer = Vector3([0.0, 0.0, 0.0])
         self.vector_lookat = Vector3([1.0, 0.0, 0.0])
 
+        # textures to depth and normal from 1 pass
+        self.offscreen_depth = self.ctx.depth_texture(self.window_size)
+        self.offscreen = self.ctx.framebuffer(
+            color_attachments=[self.ctx.texture(self.window_size, 4)],
+            depth_attachment=self.offscreen_depth
+        )
+
         # SKYBOX initialization
         self.program_skybox = self.load_program(path="shaders/shader_skybox.glsl")
         self.obj_skybox = self.load_scene('models/skybox.obj')
@@ -31,9 +39,9 @@ class WindowSkybox(mglw.WindowConfig):
         self.sampler_skybox = self.ctx.sampler(texture=self.texture_skybox)
 
         # PHONG initialization
-        self.program_phong = self.load_program(path="shaders/shader_phong.glsl")
-        self.obj_phong = self.load_scene('models/sphere.obj')
-        self.vao_phong = self.obj_phong.root_nodes[0].mesh.vao.instance(self.program_phong)
+        # self.program_phong = self.load_program(path="shaders/shader_phong.glsl")
+        # self.obj_phong = self.load_scene('models/sphere.obj')
+        # self.vao_phong = self.obj_phong.root_nodes[0].mesh.vao.instance(self.program_phong)
 
         # LOCALIZATION initialization
         self.program_loc = self.load_program(path="shaders/shader_location.glsl")
@@ -45,6 +53,15 @@ class WindowSkybox(mglw.WindowConfig):
         self.obj_glass = self.load_scene('models/sphere.obj')
         self.vao_glass = self.obj_glass.root_nodes[0].mesh.vao.instance(self.program_glass)
 
+        # 1&2 pass
+        self.obj_both_pass = self.load_scene('models/sphere.obj')
+        self.program_1_pass = self.load_program(path="shaders/shader_1_pass.glsl")
+        self.vao_1_pass = self.obj_both_pass.root_nodes[0].mesh.vao.instance(self.program_1_pass)
+        self.program_2_pass = self.load_program(path="shaders/shader_2_pass.glsl")
+        #self.program_2_pass['depthMap'].handle = self.offscreen_depth.get_handle()
+        self.program_2_pass['depthMap'].value = 0
+        self.vao_2_pass = self.obj_both_pass.root_nodes[0].mesh.vao.instance(self.program_2_pass)
+
         self.init_shaders_variables()
 
     def init_shaders_variables(self):
@@ -54,12 +71,12 @@ class WindowSkybox(mglw.WindowConfig):
         self.program_skybox["u_cubemap"].write(self.texture_skybox.read(face=0))
 
         # initialize phong ball variables
-        self.uniform_MVP_phong = self.program_phong['MVP_phong']
-        self.uniform_color_fragments_phong = self.program_phong['color_body_part_phong']
-        self.uniform_viewing_position_phong = self.program_phong['viewing_phong']
+        # self.uniform_MVP_phong = self.program_phong['MVP_phong']
+        # self.uniform_color_fragments_phong = self.program_phong['color_body_part_phong']
+        # self.uniform_viewing_position_phong = self.program_phong['viewing_phong']
 
         # initialize localization ball
-        self.uniform_MVP_loc = self.program_loc['MVP']
+        # self.uniform_MVP_loc = self.program_loc['MVP']
 
         # initialize glass ball variables
         self.uniform_MVP_glass = self.program_glass['MVP']
@@ -91,23 +108,23 @@ class WindowSkybox(mglw.WindowConfig):
         self.vao_skybox.render()
 
         # Phong ball render
-        color = Vector3([0.9, 0.25, 0.25])
-        self.uniform_color_fragments_phong.write(color.astype('f4'))
-        model = Matrix44.from_translation((10, 0, -3))
-        model = model * Matrix44.from_x_rotation(0)
-        model = model * Matrix44.from_scale((1.0, 1.0, 1.0))
-        MVP = projection * lookat * model
-        self.uniform_MVP_phong.write(MVP.astype('f4'))
-        self.uniform_viewing_position_phong.write((self.vector_viewer.astype('f4')))
-        self.vao_phong.render()
+        # color = Vector3([0.9, 0.25, 0.25])
+        # self.uniform_color_fragments_phong.write(color.astype('f4'))
+        # model = Matrix44.from_translation((10, 0, -3))
+        # model = model * Matrix44.from_x_rotation(0)
+        # model = model * Matrix44.from_scale((1.0, 1.0, 1.0))
+        # MVP = projection * lookat * model
+        # self.uniform_MVP_phong.write(MVP.astype('f4'))
+        # self.uniform_viewing_position_phong.write((self.vector_viewer.astype('f4')))
+        # self.vao_phong.render()
 
         # Location ball render
-        model = Matrix44.from_translation((10, 0, 3))
-        model = model * Matrix44.from_x_rotation(0)
-        model = model * Matrix44.from_scale((1, 1, 1))
-        MVP = projection * lookat * model
-        self.uniform_MVP_loc.write(MVP.astype('f4'))
-        self.vao_loc.render()
+        # model = Matrix44.from_translation((10, 0, 3))
+        # model = model * Matrix44.from_x_rotation(0)
+        # model = model * Matrix44.from_scale((1, 1, 1))
+        # MVP = projection * lookat * model
+        # self.uniform_MVP_loc.write(MVP.astype('f4'))
+        # self.vao_loc.render()
 
         #  glass render
         model = Matrix44.from_translation((10, 0, 0))
@@ -119,6 +136,30 @@ class WindowSkybox(mglw.WindowConfig):
         self.uniform_model_mat_glass.write(model.astype('f4'))
         self.uniform_camera_pos_glass.write(self.vector_viewer.astype('f4'))
         self.vao_glass.render()
+
+        # render in 2 pass
+        # setting to both pass
+        model = Matrix44.from_translation((10, 0, 3))
+        model = model * Matrix44.from_x_rotation(0)
+        model = model * Matrix44.from_scale((1, 1, 1))
+        MVP = projection * lookat * model
+        # 1 pass
+        self.offscreen.clear(depth = 1.0)
+        self.offscreen.use()
+        depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
+        print(np.all(np.isclose(depth, 1.0)))
+        self.ctx.enable(moderngl.CULL_FACE)
+        self.ctx.cull_face = 'front'
+        self.program_1_pass['MVP'].write(MVP.astype('f4'))
+        self.vao_1_pass.render()
+        depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
+        print(np.all(np.isclose(depth, 1.0)))
+        # 2 pass
+        self.offscreen_depth.use(location=0)
+        self.ctx.disable(moderngl.CULL_FACE)
+        #self.ctx.cull_face = 'back'
+        self.program_2_pass['MVP'].write(MVP.astype('f4'))
+        self.vao_2_pass.render()
 
     def mouse_position_event(self, x, y, dx, dy):
         print("Mouse position:", x, y, dx, dy)
