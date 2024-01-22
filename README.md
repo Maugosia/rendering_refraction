@@ -2,9 +2,9 @@
 Rendering of refraction effect using openGL and python
 
 openGL python wrapper:
-<a href="https://moderngl.readthedocs.io/en/5.8.2/" target="_blank">ModernGL</a>
-<a href="https://moderngl.readthedocs.io/_/downloads/en/latest/pdf/" target="_blank">Documentatuon pdf</a>
-<a href="https://www.khronos.org/opengl/wiki/Main_Page" target="_blank">OpenGL Wiki</a>
+<a href="https://moderngl.readthedocs.io/en/5.8.2/" target="_blank">ModernGL</a>, 
+<a href="https://moderngl.readthedocs.io/_/downloads/en/latest/pdf/" target="_blank">Documentatuon pdf</a>, 
+<a href="https://www.khronos.org/opengl/wiki/Main_Page" target="_blank">OpenGL Wiki</a>, 
 
 About shaders:
 <a href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders" target="_blank">Shaders</a>
