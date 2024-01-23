@@ -21,8 +21,9 @@ class WindowSkybox(mglw.WindowConfig):
 
         # textures to depth and normal from 1 pass
         self.offscreen_depth = self.ctx.depth_texture(self.window_size)
+        self.offscreen_normal = self.ctx.texture(self.window_size, 3)
         self.offscreen = self.ctx.framebuffer(
-            color_attachments=[self.ctx.texture(self.window_size, 4)],
+            color_attachments=[self.offscreen_normal],
             depth_attachment=self.offscreen_depth
         )
 
@@ -147,16 +148,21 @@ class WindowSkybox(mglw.WindowConfig):
         self.offscreen.clear(depth = 1.0)
         self.offscreen.use()
         depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
-        print(np.all(np.isclose(depth, 1.0)))
+        normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
+        print("Depth before (if True -> ok)", np.all(np.isclose(depth, 1.0)))
+        print("Normal before (if True -> ok)", np.all(np.isclose(normal, 0.0)))
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.cull_face = 'front'
         self.program_1_pass['MVP'].write(MVP.astype('f4'))
         self.vao_1_pass.render()
         depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
-        print(np.all(np.isclose(depth, 1.0)))
+        normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
+        print("Depth after (if False -> ok)", np.all(np.isclose(depth, 1.0)))
+        print("Normal after (if False -> ok)", np.all(np.isclose(normal, 0.0)))
         # 2 pass
         self.ctx.screen.use()
         self.offscreen_depth.use(location=0)
+        self.offscreen_normal.use(location=1)
         self.ctx.disable(moderngl.CULL_FACE)
         #self.ctx.cull_face = 'back'
         self.program_2_pass['MVP'].write(MVP.astype('f4'))
