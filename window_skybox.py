@@ -155,6 +155,7 @@ class WindowSkybox(mglw.WindowConfig):
         depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
         print(np.all(np.isclose(depth, 1.0)))
         # 2 pass
+        self.ctx.screen.use()
         self.offscreen_depth.use(location=0)
         self.ctx.disable(moderngl.CULL_FACE)
         #self.ctx.cull_face = 'back'
