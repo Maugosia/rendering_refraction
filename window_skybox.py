@@ -63,14 +63,7 @@ class WindowSkybox(mglw.WindowConfig):
         self.program_2_pass['depthMap'].value = 0
         self.vao_2_pass = self.obj_both_pass.root_nodes[0].mesh.vao.instance(self.program_2_pass)
 
-        self.offscreen_nearby_geometry = self.ctx.texture(self.window_size, 3)  # 3 components for storing normals
-        self.offscreen_nearby = self.ctx.framebuffer(
-            color_attachments=[self.offscreen_nearby_geometry],
-            depth_attachment=self.offscreen_depth
-        )
-
-        self.offscreen_nearby_geometry = self.ctx.texture(self.window_size,
-                                                          3)  # components for storing nearby geometry information
+        self.offscreen_nearby_geometry = self.ctx.texture(self.window_size,3)  # components for storing nearby geometry rgb
         self.offscreen_nearby = self.ctx.framebuffer(
             color_attachments=[self.offscreen_nearby_geometry],
             depth_attachment=self.offscreen_depth
