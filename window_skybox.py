@@ -63,6 +63,19 @@ class WindowSkybox(mglw.WindowConfig):
         self.program_2_pass['depthMap'].value = 0
         self.vao_2_pass = self.obj_both_pass.root_nodes[0].mesh.vao.instance(self.program_2_pass)
 
+        self.offscreen_nearby_geometry = self.ctx.texture(self.window_size, 3)  # 3 components for storing normals
+        self.offscreen_nearby = self.ctx.framebuffer(
+            color_attachments=[self.offscreen_nearby_geometry],
+            depth_attachment=self.offscreen_depth
+        )
+
+        self.offscreen_nearby_geometry = self.ctx.texture(self.window_size,
+                                                          3)  # components for storing nearby geometry information
+        self.offscreen_nearby = self.ctx.framebuffer(
+            color_attachments=[self.offscreen_nearby_geometry],
+            depth_attachment=self.offscreen_depth
+        )
+
         self.init_shaders_variables()
 
     def init_shaders_variables(self):
@@ -85,6 +98,8 @@ class WindowSkybox(mglw.WindowConfig):
         self.uniform_normal_mat_glass = self.program_glass['u_normalMatrix']
         self.uniform_camera_pos_glass = self.program_glass['u_camera']
         self.program_glass["u_cubemap"].write(self.texture_skybox.read(face=0))
+        self.program_2_pass['nearbyGeometryMap'].value = 1  # Use texture unit 1 for nearby geometry map
+        self.program_2_pass["nearbyGeometryMap"].write(self.offscreen_nearby_geometry.read())
 
     def render(self, time, frametime):
         # Prepare context
@@ -144,25 +159,38 @@ class WindowSkybox(mglw.WindowConfig):
         model = model * Matrix44.from_x_rotation(0)
         model = model * Matrix44.from_scale((1, 1, 1))
         MVP = projection * lookat * model
+
+
         # 1 pass
-        self.offscreen.clear(depth = 1.0)
-        self.offscreen.use()
-        depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
-        normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
-        print("Depth before (if True -> ok)", np.all(np.isclose(depth, 1.0)))
-        print("Normal before (if True -> ok)", np.all(np.isclose(normal, 0.0)))
-        self.ctx.enable(moderngl.CULL_FACE)
-        self.ctx.cull_face = 'front'
+        # self.offscreen.clear(depth = 1.0)
+        # self.offscreen.use()
+        # depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
+        # normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
+        # print("Depth before (if True -> ok)", np.all(np.isclose(depth, 1.0)))
+        # print("Normal before (if True -> ok)", np.all(np.isclose(normal, 0.0)))
+        # self.ctx.enable(moderngl.CULL_FACE)
+        # self.ctx.cull_face = 'front'
+        # self.program_1_pass['MVP'].write(MVP.astype('f4'))
+        # self.vao_1_pass.render()
+        # depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
+        # normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
+        # print("Depth after (if False -> ok)", np.all(np.isclose(depth, 1.0)))
+        # print("Normal after (if False -> ok)", np.all(np.isclose(normal, 0.0)))
+        # 1 pass (before rendering refractive object)
+        self.offscreen_nearby.clear(depth=1.0)
+        self.offscreen_nearby.use()
         self.program_1_pass['MVP'].write(MVP.astype('f4'))
         self.vao_1_pass.render()
-        depth = np.frombuffer(self.offscreen_depth.read(alignment=1), dtype=np.dtype('f4'))
-        normal = np.frombuffer(self.offscreen.read(components=3), dtype=np.dtype('f4'))
-        print("Depth after (if False -> ok)", np.all(np.isclose(depth, 1.0)))
-        print("Normal after (if False -> ok)", np.all(np.isclose(normal, 0.0)))
+
         # 2 pass
         self.ctx.screen.use()
         self.offscreen_depth.use(location=0)
         self.offscreen_normal.use(location=1)
+
+        self.offscreen_nearby_geometry.use(location=1)
+        self.program_2_pass['MVP'].write(MVP.astype('f4'))
+        self.vao_2_pass.render()
+
         self.ctx.disable(moderngl.CULL_FACE)
         #self.ctx.cull_face = 'back'
         self.program_2_pass['MVP'].write(MVP.astype('f4'))

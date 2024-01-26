@@ -5,6 +5,7 @@ from pyrr import Matrix44
 from pyrr import Vector3
 
 
+# tu się fajnie dziedziczy
 class WindowTest(mglw.WindowConfig):
     gl_version = (3, 3)
     window_size = (640, 480)
@@ -16,16 +17,19 @@ class WindowTest(mglw.WindowConfig):
         self.program = self.load_program(path="shaders/shader_normals.glsl")
         self.texture = self.ctx.texture(self.wnd.size, 4)
         self.obj = self.load_scene('models/sphere.obj')
+        # self.obj = self.load_scene('models/bunny.obj')
         self.vao = self.obj.root_nodes[0].mesh.vao.instance(self.program)
 
         self.program_phong = self.load_program(path="shaders/shader_phong.glsl")
         self.texture = self.ctx.texture(self.wnd.size, 4)
         self.obj_phong = self.load_scene('models/sphere.obj')
+        # self.obj_phong = self.load_scene('models/bunny.obj')
         self.vao_phong = self.obj_phong.root_nodes[0].mesh.vao.instance(self.program_phong)
 
         self.program_loc = self.load_program(path="shaders/shader_location.glsl")
         self.texture = self.ctx.texture(self.wnd.size, 4)
         self.obj_loc = self.load_scene('models/sphere.obj')
+        # self.obj_loc = self.load_scene('models/bunny.obj')
         self.vao_loc = self.obj_loc.root_nodes[0].mesh.vao.instance(self.program_loc)
 
         self.init_shaders_variables()
